@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Contact | LandScope</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<!-- AOS -->
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+<style>
+body {
+    margin:0;
+    font-family:'Poppins', sans-serif;
+    background:#0f172a;
+    color:#e2e8f0;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+}
+
+.header h2 {
+    color: #38bdf8;
+}
+
+.nav a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.nav a:hover {
+    color: #38bdf8;
+}
+
+/* HERO */
+.hero-card {
+    margin:40px auto;
+    max-width:800px;
+    padding:40px;
+    text-align:center;
+    background:rgba(30,41,59,0.8);
+    border-radius:20px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 30px rgba(56,189,248,0.3);
+}
+
+/* LAYOUT */
+.container {
+    display:flex;
+    gap:30px;
+    padding:40px;
+    flex-wrap:wrap;
+}
+
+/* CARD */
+.card {
+    flex:1;
+    background:rgba(30,41,59,0.85);
+    padding:25px;
+    border-radius:16px;
+    transition:0.4s;
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+.card:hover {
+    transform:translateY(-10px) scale(1.02);
+    box-shadow:0 0 25px rgba(56,189,248,0.5);
+}
+
+/* INPUT */
+input, textarea {
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:8px;
+    background:#020617;
+    color:white;
+}
+
+button {
+    width:100%;
+    padding:12px;
+    background:linear-gradient(90deg,#38bdf8,#22c55e);
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+/* TRUST */
+.trust {
+    margin:40px;
+}
+
+/* FOOTER */
+.footer {
+    text-align:center;
+    padding:20px;
+    background:#020617;
+}
+
+#toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(34,197,94,0.9);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    box-shadow: 0 0 20px rgba(34,197,94,0.6);
+    transform: translateX(120%);
+    animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 4s;
+    z-index: 999;
+}
+
+#toast i {
+    font-size: 18px;
+}
+
+/* SLIDE IN */
+@keyframes slideIn {
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* FADE OUT */
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(120%);
+    }
+}
+
+#error-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(239,68,68,0.95);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    box-shadow: 0 0 20px rgba(239,68,68,0.6);
+    transform: translateX(120%);
+    animation: slideIn 0.5s forwards, fadeOut 0.5s forwards 4s;
+    z-index: 999;
+}
+
+.logout-btn {
+    padding:6px 12px;
+    background:#ef4444;
+    border-radius:8px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.logout-btn:hover {
+    background:#dc2626;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>LandScope</h2>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/buy">Buy</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if user.is_authenticated %}
+            <span style="margin-left:20px;">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+</div>
+{% if request.session.logout_msg %}
+<div id="toast">
+    <i class="fas fa-check-circle"></i>
+    {{ request.session.logout_msg }}
+</div>
+{% endif %}
+<!-- HERO -->
+<div class="hero-card" data-aos="zoom-in">
+    <h1>📩 Contact LandScope</h1>
+    <p>We’re here to help you make smarter land investment decisions</p>
+</div>
+
+{% if success %}
+<div id="toast">
+    <i class="fas fa-check-circle"></i>
+    Message sent successfully 🚀
+</div>
+{% endif %}
+
+{% if error %}
+<div id="error-toast">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ error }}
+</div>
+{% endif %}
+
+<script>
+setTimeout(() => {
+    const toast = document.getElementById("toast");
+    if (toast) {
+        toast.remove();
+    }
+}, 6000);
+</script>
+
+<script>
+setTimeout(() => {
+    const toast = document.getElementById("toast");
+    const errorToast = document.getElementById("error-toast");
+
+    if (toast) toast.remove();
+    if (errorToast) errorToast.remove();
+}, 6000);
+</script>
+
+<!-- MAIN -->
+<div class="container">
+
+    <!-- LEFT FORM -->
+    <div class="card" data-aos="fade-right">
+        <form method="POST">
+            {% csrf_token %}
+
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <input type="text" name="subject" placeholder="Subject" required>
+            <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+
+            <button type="submit">Send Message</button>
+        </form>
+    </div>
+
+    <!-- RIGHT INFO -->
+    <div class="card" data-aos="fade-left">
+
+        <h3>📧 Email</h3>
+        <p>landscope.mlai@gmail.com</p>
+
+        <h3>📱 Phone</h3>
+        <p>+91 99999 99999</p>
+
+        <h3>📍 Location</h3>
+        <p>Hyderabad, Telangana, India</p>
+
+    </div>
+
+</div>
+
+<!-- TRUST -->
+<div class="card trust" data-aos="fade-up">
+    <h3>🔒 Trust & Safety</h3>
+    <p>
+        Your information is secure. We ensure privacy and respond within 24 hours.
+        No spam, no unnecessary communication.
+    </p>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 LandScope | AI Real Estate Platform 🚀
+</div>
+
+<!-- AOS JS -->
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({
+    duration: 1000,
+    once: true
+});
+</script>
+<script>
+setTimeout(()=>{
+    const t=document.getElementById("toast");
+    const e=document.getElementById("error-toast");
+    if(t) t.remove();
+    if(e) e.remove();
+},4000);
+</script>
+</body>
+</html>

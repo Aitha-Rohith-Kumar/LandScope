@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ plot.title }}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.85);
+            padding: 30px;
+            border-radius: 16px;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 0 20px rgba(0,0,0,0.4);
+        }
+
+        h2 {
+            background: linear-gradient(90deg,#38bdf8,#22c55e);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+        }
+
+        hr {
+            border: 0.5px solid rgba(255,255,255,0.1);
+            margin: 20px 0;
+        }
+
+        .section-title {
+            margin-bottom: 10px;
+            color: #38bdf8;
+        }
+
+        /* SCORE */
+        .score {
+            font-size: 26px;
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        /* BADGE */
+        .badge {
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .excellent { background: #16a34a; }
+        .good { background: #f59e0b; color:black; }
+        .risky { background: #ef4444; }
+
+        /* PROGRESS BAR */
+        .bar-container {
+            margin-bottom: 15px;
+        }
+
+        .bar {
+            height: 10px;
+            background: #22c55e;
+            border-radius: 10px;
+        }
+
+        /* BUTTON */
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .btn-back {
+            background: #64748b;
+            color: white;
+        }
+
+        .btn-report {
+            background: #38bdf8;
+            color: black;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+        }
+
+        .bar-container {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .bar {
+            height: 10px;
+            border-radius: 6px;
+            margin-top: 5px;
+            background: linear-gradient(90deg, #22c55e, #38bdf8);
+            transition: width 0.8s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <a href="/buy/" class="btn btn-back">⬅ Back</a>
+
+    <div class="card">
+
+        <h2>{{ plot.title }}</h2>
+        <p class="subtitle">{{ plot.location }}</p>
+        <hr>
+        <h4>📍 Location</h4>
+        
+        <iframe
+            width="100%"
+            height="300"
+            style="border-radius:12px; border:none; margin-bottom:20px;"
+            src="https://maps.google.com/maps?q={{ plot.latitude }},{{ plot.longitude }}&z=15&output=embed">
+        </iframe>
+
+        <hr>
+
+        <h4 class="section-title">📌 Property Details</h4>
+        {% load indian_format %}
+        <p><strong>Price:</strong> ₹{{ plot.price|indian_comma }}</p>
+        <p><strong>Area:</strong> {{ plot.area_sqft }} sqft</p>
+        <p><strong>Metro Distance:</strong> {{ plot.metro_distance|floatformat:2 }} km</p>
+
+        <hr>
+
+        <h4 class="section-title">🤖 AI Prediction</h4>
+        <p><strong>AI Estimated Price:</strong> ₹{{ plot.predicted_price|indian_comma }}</p>
+
+        
+
+        <p class="score">
+            Investment Score: {{ plot.investment_score|floatformat:2 }}/100
+        </p>
+
+        {% if plot.investment_score > 70 %}
+            <div class="badge excellent">🔥 Excellent Investment</div>
+        {% elif plot.investment_score > 45 %}
+            <div class="badge good">⭐ Good Potential</div>
+        {% else %}
+            <div class="badge risky">⚠ Risky</div>
+        {% endif %}
+
+        <div style="
+            background: rgba(56,189,248,0.1);
+            padding:15px;
+            border-radius:12px;
+            margin-top:15px;
+            ">
+
+            <strong>📈 AI Insight:</strong>
+
+            {% if plot.investment_score > 70 %}
+                This land shows strong growth potential with good infrastructure and low risk.
+            {% elif plot.investment_score > 45 %}
+                This land has moderate growth potential. Consider long-term investment.
+            {% else %}
+                This land has higher risk. Careful evaluation is recommended.
+            {% endif %}
+
+        </div>
+
+        <hr>
+
+        <h4 class="section-title">📊 Score Breakdown</h4>
+
+        <div class="bar-container">
+            Crime Rate({{ plot.crime_rate|default:0|floatformat:1 }}/10)
+            <div class="bar" style="width: {{ plot.crime_rate|default:0|add:0|floatformat:0 }}0%"></div>
+        </div>
+
+        <div class="bar-container">
+            Pollution({{ plot.pollution|default:0|floatformat:1 }}/10)
+            <div class="bar" style="width: {{ plot.pollution|default:0|add:0|floatformat:0 }}0%"></div>
+        </div>
+
+        <div class="bar-container">
+            Infrastructure({{ plot.infrastructure|default:0|floatformat:1 }}/10)
+            <div class="bar" style="width: {{ plot.infrastructure|default:0|add:0|floatformat:0 }}0%"></div>
+        </div>
+
+        <hr>
+
+        <h4 class="section-title">📞 Contact Details</h4>
+
+        {% if user.is_authenticated %}
+            <p><strong>Name:</strong> {{ plot.contact_name }}</p>
+            <p><strong>Phone:</strong> {{ plot.contact_phone }}</p>
+        {% else %}
+            <a href="{% url 'login' %}" style="color:#fbbf24;">Login to view contact details</a>
+        {% endif %}
+        <br>
+        <a href="{% url 'download_report' plot.id %}" class="btn btn-report">
+            📄 Download Report
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

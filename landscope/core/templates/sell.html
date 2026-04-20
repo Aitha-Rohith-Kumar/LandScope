@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Sell Property | LandScope</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin:0;
+    font-family:'Poppins';
+    background:#0f172a;
+    color:#e2e8f0;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+}
+
+.header h2 {
+    color: #38bdf8;
+}
+
+.nav a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.nav a:hover {
+    color: #38bdf8;
+}
+
+/* HERO */
+.hero {
+    text-align:center;
+    padding:40px;
+}
+.hero h1 { font-size:32px; }
+
+/* FORM GRID */
+.form-container {
+    max-width:900px;
+    margin:30px auto;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:20px;
+}
+
+/* CARD */
+.card {
+    background:rgba(30,41,59,0.9);
+    padding:20px 25px;
+    border-radius:12px;
+}
+
+/* INPUT */
+input {
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:none;
+    border-radius:8px;
+}
+
+/* BUTTON */
+button {
+    grid-column:span 2;
+    padding:12px;
+    background:#38bdf8;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+}
+
+/* SUCCESS */
+.success {
+    text-align:center;
+    color:#22c55e;
+}
+
+/* FOOTER */
+.footer {
+    text-align:center;
+    padding:20px;
+    background:#020617;
+    margin-top:40px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>LandScope</h2>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/buy">Buy</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if user.is_authenticated %}
+            <span style="margin-left:20px;">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+    <h1>🏡 Sell Your Property</h1>
+    <p>List your land and let AI evaluate its investment potential</p>
+</div>
+
+{% if success %}
+<p class="success">{{ success }}</p>
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+{% csrf_token %}
+
+<div class="form-container">
+
+<div class="card">
+    <label for="title">Title</label>
+    <input type="text" name="title" placeholder="Title" required>
+    <label for="location">Location</label>
+    <input type="text" name="location" placeholder="Location" required>
+    <label for="area">Area (sqft)</label>
+    <input type="number" name="area" placeholder="Area (sqft)" required>
+    <label for="price">Price (₹)</label>
+    <input type="text" name="price" placeholder="Price (₹)" required>
+    <label for="location_link">Google Map Link</label>
+    <input type="url" name="location_link" placeholder="Google Map Link">
+</div>
+
+<div class="card">
+    <label for="metro_distance">Metro Distance (optional)</label>
+    <input type="number" name="metro_distance" placeholder="Metro Distance (optional)">
+    <label for="crime_rate">Crime Rate (optional)</label>
+    <input type="number" name="crime_rate" placeholder="Crime Rate (optional)">
+    <label for="pollution">Pollution (optional)</label>
+    <input type="number" name="pollution" placeholder="Pollution (optional)">
+    <label for="owner">Owner Name</label>
+    <input type="text" name="owner" placeholder="Owner Name" required>
+    <label for="phone">Phone Number</label>
+    <input type="text" name="phone" placeholder="Phone Number" required>
+    <label for="image">Property Images</label>
+    <input type="file" name="image">
+</div>
+
+<button type="submit">Submit Property</button>
+
+</div>
+</form>
+
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 LandScope | AI Real Estate Platform 🚀
+</div>
+
+</body>
+</html>

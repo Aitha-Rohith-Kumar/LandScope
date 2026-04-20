@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>About | LandScope</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+body {
+    margin:0;
+    font-family:'Poppins',sans-serif;
+    background:#0f172a;
+    color:#e2e8f0;
+    overflow-x:hidden;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+}
+
+.header h2 {
+    color: #38bdf8;
+}
+
+.nav a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.nav a:hover {
+    color: #38bdf8;
+}
+
+/* PARTICLES BACKGROUND */
+canvas {
+    position:fixed;
+    top:0; left:0;
+    z-index:-1;
+}
+
+/* HERO CARD */
+.hero-card {
+    margin:40px auto;
+    max-width:800px;
+    padding:40px;
+    text-align:center;
+    background:rgba(30,41,59,0.8);
+    border-radius:20px;
+    backdrop-filter:blur(10px);
+    box-shadow:0 0 30px rgba(56,189,248,0.3);
+}
+
+.hero-card h1 {
+    font-size:42px;
+    background:linear-gradient(90deg,#38bdf8,#22c55e);
+    -webkit-background-clip:text;
+    color:transparent;
+}
+
+/* SECTION */
+.section {
+    padding:50px 40px;
+    text-align:center;
+}
+
+.section h2 {
+    margin-bottom:20px;
+    color:#38bdf8;
+}
+
+/* CARD GRID */
+.grid {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+}
+
+
+
+.card {
+    background:rgba(30,41,59,0.85);
+    padding:20px;
+    border-radius:15px;
+    transition:0.4s;
+}
+
+.card:hover {
+    transform:translateY(-10px) scale(1.02);
+    box-shadow:0 0 25px rgba(56,189,248,0.5);
+}
+
+/* COUNTERS */
+.counter {
+    font-size:30px;
+    color:#22c55e;
+}
+
+/* FLOW */
+.flow {
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:20px;
+}
+
+.flow-step {
+    padding:15px;
+    background:rgba(255,255,255,0.05);
+    border-radius:10px;
+}
+
+/* FOOTER */
+.footer {
+    text-align:center;
+    padding:20px;
+    background:#020617;
+}
+.card {
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: "";
+    position: absolute;
+    width: 150%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(56,189,248,0.3), transparent);
+    top: -50%;
+    left: -50%;
+    opacity: 0;
+    transition: 0.5s;
+}
+
+.card:hover::before {
+    opacity: 1;
+}
+.section p {
+    transition: 0.6s;
+}
+
+.section p:hover {
+    color: #38bdf8;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px;
+}
+
+.card {
+    background: rgba(30,41,59,0.85);
+    padding: 25px;
+    border-radius: 16px;
+    text-align: center;
+    transition: 0.4s;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 0 25px rgba(56,189,248,0.5);
+}
+
+.counter {
+    font-size: 40px;
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.logout-btn {
+    padding:6px 12px;
+    background:#ef4444;
+    border-radius:8px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.logout-btn:hover {
+    background:#dc2626;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="particles"></canvas>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>LandScope</h2>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/buy">Buy</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if user.is_authenticated %}
+            <span style="margin-left:20px;">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero-card" data-aos="zoom-in">
+    <h1>LandScope 🚀</h1>
+    <p>AI-Driven Land Investment Analysis Platform</p>
+    <p>A smart decision-making system that evaluates land using Machine Learning, 
+        infrastructure analysis, and environmental factors to generate accurate 
+        investment insights.</p>
+</div>
+
+<!-- PROBLEM -->
+<div class="section" data-aos="fade-up">
+    <h2>⚠ Existing Problems</h2>
+    <div class="grid">
+        <div class="card" data-aos="fade-right">Traditional land investment relies heavily on human judgment and subjective analysis</div>
+        <div class="card" data-aos="fade-left">Real estate recommendations are often influenced by intermediaries and commission-based systems</div>
+        <div class="card" data-aos="fade-right">Lack of integration of infrastructure, safety, and environmental factors in decision-making</div>
+        <div class="card" data-aos="fade-left">No predictive system to estimate future land value appreciation</div>
+        <div class="card" data-aos="fade-right">Absence of a unified platform combining multiple investment parameters</div>
+        <div class="card" data-aos="fade-left">Manual verification processes are time-consuming and prone to errors</div>
+    </div>
+</div>
+
+<!-- SOLUTION -->
+<div class="section" data-aos="fade-right">
+    <h2>💡 Our Solution</h2>
+    <div class="card">
+        <p>LandScope introduces an AI-driven framework for intelligent land investment analysis. 
+        The system evaluates land parcels using multiple real-world parameters such as 
+        infrastructure development, crime rate, pollution levels, metro accessibility, 
+        and growth indicators.</p><br>
+
+        <p>A Machine Learning model (Random Forest Regressor) is used to predict future land prices 
+        based on historical and spatial features. Additionally, a comprehensive Investment Score 
+        is generated using a weighted scoring mechanism combining valuation strength, 
+        infrastructure quality, growth potential, accessibility, and safety metrics.</p><br>
+
+        <p>This approach enables users to make data-driven decisions, eliminating human bias 
+        and dependency on intermediaries, while providing a centralized and scalable platform 
+        for modern real estate analysis.</p><br>
+    </div>
+</div>
+
+<!-- IMPACT -->
+<div class="section" id="impact-section" data-aos="fade-up">
+
+    <h2>📊 Platform Impact</h2>
+
+    <div class="grid-3">
+
+        <div class="card">
+            <div class="counter" data-target="{{ total_plots }}">0</div>
+            <p>Plots Analyzed</p>
+        </div>
+
+        <div class="card">
+            <div class="counter" data-target="{{ accuracy }}">0</div>
+            <p>Model Accuracy (%)</p>
+        </div>
+
+        <div class="card">
+            <div class="counter" data-target="{{ insights }}">0</div>
+            <p>AI Insights Generated</p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- FEATURES -->
+<div class="section" data-aos="fade-up">
+    <h2>🚀 Features</h2>
+    <div class="grid">
+        <div class="card" data-aos="zoom-in">🤖 AI-Based Price Prediction using Machine Learning</div>
+        <div class="card" data-aos="zoom-in">📍 Location Intelligence based on spatial data</div>
+        <div class="card" data-aos="zoom-in">📊 Investment Score Generation using multi-factor analysis</div>
+        <div class="card" data-aos="zoom-in">🚔 Crime Rate Analysis for safety evaluation</div>
+        <div class="card" data-aos="zoom-in">🌫 Pollution Level Monitoring for environmental assessment</div>
+        <div class="card" data-aos="zoom-in">🚇 Metro Distance Analysis for accessibility</div>
+        <div class="card" data-aos="zoom-in">🏥 Nearby Facilities — healthcare, schools, and essential services</div>
+        <div class="card" data-aos="zoom-in">🏗 Infrastructure Scoring based on development indicators</div>
+    </div>
+</div>
+
+<!-- TECH STACK -->
+<div class="section" data-aos="fade-left">
+    <h2>🧠 Technologies</h2>
+    <div class="grid">
+        <div class="card" data-aos="zoom-in">Backend: Django Framework</div>
+        <div class="card" data-aos="zoom-in">Frontend: HTML, CSS, JavaScript</div>
+        <div class="card" data-aos="zoom-in">Machine Learning: Random Forest Algorithm, K-means Clustering</div>
+        <div class="card" data-aos="zoom-in">Database: SQLite</div>
+        <div class="card" data-aos="zoom-in">Visualization: Chart.js</div>
+        <div class="card" data-aos="zoom-in">Data Processing: Pandas, NumPy</div>
+    </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="section" data-aos="fade-right">
+    <h2>⚙ How It Works</h2>
+    <div class="flow">
+        <div class="flow-step">📥 Input</div>
+        <div class="flow-step">➡</div>
+        <div class="flow-step">⚙ Processing</div>
+        <div class="flow-step">➡</div>
+        <div class="flow-step">🤖 ML</div>
+        <div class="flow-step">➡</div>
+        <div class="flow-step">📈 Prediction</div>
+        <div class="flow-step">➡</div>
+        <div class="flow-step">📊 Output</div>
+    </div>
+</div>
+
+<!-- FUTURE -->
+<div class="section" data-aos="zoom-in-up">
+    <h2>🚀 Future Scope</h2>
+    <div class="card">
+        • Integration with real-time real estate APIs <br>
+        • Expansion to multiple cities beyond current scope <br> 
+        • Use of satellite imagery for advanced land analysis  <br>
+        • Implementation of deep learning models for higher accuracy <br> 
+        • Blockchain-based land ownership verification  <br>
+        • Development of mobile application for wider accessibility <br>
+    </div>
+</div>
+
+<!-- TEAM -->
+<div class="section" data-aos="fade-up">
+    <h2>👨‍💻 Team</h2>
+    <div class="card">
+        <p><strong>A.Rohith Kumar(22K91A6704)</strong></p>
+        <p><strong>B.Nithin(22K91A6730)</strong></p>
+        <p><strong>B.Akshitha(22K91A6715)</strong></p>
+        <p><strong>D.Deethwik(22K91A6751)</strong></p>
+        <p><strong>G.Sathwik(22K91A6757)</strong></p>
+    </div>
+</div>
+{% if request.session.logout_msg %}
+<div id="toast">
+    <i class="fas fa-check-circle"></i>
+    {{ request.session.logout_msg }}
+</div>
+{% endif %}
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 LandScope | AI Real Estate Platform 🚀
+</div>
+
+<script>
+// COUNTER ANIMATION
+function animate(id, end){
+    let i=0;
+    let interval=setInterval(()=>{
+        if(i>=end) clearInterval(interval);
+        document.getElementById(id).innerText=i;
+        i++;
+    },10);
+}
+animate("c1",100);
+animate("c2",95);
+animate("c3",300);
+
+// PARTICLES
+const canvas=document.getElementById("particles");
+const ctx=canvas.getContext("2d");
+canvas.width=window.innerWidth;
+canvas.height=window.innerHeight;
+
+let particles=[];
+for(let i=0;i<80;i++){
+    particles.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height});
+}
+
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle="#38bdf8";
+    particles.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,2,0,Math.PI*2);
+        ctx.fill();
+        p.y+=0.5;
+        if(p.y>canvas.height) p.y=0;
+    });
+    requestAnimationFrame(draw);
+}
+draw();
+</script>
+
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({
+    duration: 1000,
+    once: true
+});
+</script>
+<script>
+let started = false;
+
+window.addEventListener("scroll", () => {
+    const section = document.getElementById("impact-section");
+
+    if (!started && section.getBoundingClientRect().top < window.innerHeight) {
+        started = true;
+
+        const counters = document.querySelectorAll(".counter");
+
+        counters.forEach(counter => {
+            const target = +counter.getAttribute("data-target");
+            let count = 0;
+
+            const update = () => {
+                count += target / 100;
+
+                if (count < target) {
+                    counter.innerText = Math.ceil(count);
+                    requestAnimationFrame(update);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+
+            update();
+        });
+    }
+});
+</script>
+<script>
+setTimeout(()=>{
+    const t=document.getElementById("toast");
+    const e=document.getElementById("error-toast");
+    if(t) t.remove();
+    if(e) e.remove();
+},4000);
+</script>
+</body>
+</html>

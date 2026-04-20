@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login | LandScope</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+body { margin:0; font-family:'Poppins'; background:#0f172a; color:#e2e8f0; }
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: rgba(2,6,23,0.8);
+    backdrop-filter: blur(10px);
+}
+
+.header h2 {
+    color: #38bdf8;
+}
+
+.nav a {
+    margin-left: 25px;
+    text-decoration: none;
+    color: white;
+    transition: 0.3s;
+}
+
+.nav a:hover {
+    color: #38bdf8;
+}
+
+/* CARD */
+.login-card {
+    max-width:420px; margin:80px auto; padding:30px;
+    background:rgba(30,41,59,0.9); border-radius:16px;
+    text-align:center;
+    box-shadow:0 0 25px rgba(56,189,248,0.3);
+}
+
+/* INPUT */
+input {
+    width:100%; padding:12px; margin:10px 0;
+    border:none; border-radius:8px;
+    background:#020617; color:white;
+}
+
+/* BUTTON */
+button {
+    width:100%; padding:12px;
+    background:linear-gradient(90deg,#38bdf8,#22c55e);
+    border:none; border-radius:8px;
+    cursor:pointer; font-weight:600;
+}
+
+/* LINKS */
+.link { color:#38bdf8; cursor:pointer; }
+
+/* MODAL */
+.modal {
+    position:fixed; inset:0;
+    background:rgba(0,0,0,0.7);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000;
+}
+.modal.active { display:flex; }
+
+.modal-box {
+    width:350px;
+    background:#020617;
+    padding:25px;
+    border-radius:16px;
+    text-align:center;
+    box-shadow:0 0 25px rgba(56,189,248,0.5);
+}
+
+/* TOAST */
+#toast, #error-toast {
+    position:fixed; top:20px; right:20px;
+    padding:15px 20px; border-radius:12px;
+    color:white; display:flex; gap:10px;
+    transform:translateX(120%);
+    animation:slideIn 0.5s forwards, fadeOut 0.5s forwards 4s;
+}
+#toast { background:#22c55e; }
+#error-toast { background:#ef4444; }
+
+@keyframes slideIn { to { transform:translateX(0); } }
+@keyframes fadeOut { to { opacity:0; transform:translateX(120%); } }
+
+/* FOOTER */
+.footer { text-align:center; padding:20px; background:#020617; margin-top:80px; }
+
+.logout-btn {
+    padding:6px 12px;
+    background:#ef4444;
+    border-radius:8px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.logout-btn:hover {
+    background:#dc2626;
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>LandScope</h2>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/buy">Buy</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if user.is_authenticated %}
+            <span style="margin-left:20px;">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- TOASTS -->
+{% if success %}
+<div id="toast"><i class="fas fa-check-circle"></i>{{ success }}</div>
+{% endif %}
+{% if error %}
+<div id="error-toast"><i class="fas fa-exclamation-circle"></i>{{ error }}</div>
+{% endif %}
+{% if request.session.logout_msg %}
+<div id="toast">
+    <i class="fas fa-check-circle"></i>
+    {{ request.session.logout_msg }}
+</div>
+{% endif %}
+
+<!-- LOGIN -->
+<div class="login-card">
+    <h2>🔐 Login</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="send_otp">
+
+        <input type="email" name="email" placeholder="Email" autocomplete="new-password" required>
+        <input type="password" name="password" placeholder="Password" autocomplete="new-password" required>
+
+        <button type="submit">Login</button>
+    </form>
+
+    <p>New user? <span class="link" onclick="openModal('registerModal')">Register</span></p>
+    <p><span class="link" onclick="openModal('forgotModal')">Forgot Password?</span></p>
+
+    <p style="font-size:13px; color:#94a3b8;">
+        🔒 Your data is secure and encrypted
+    </p>
+</div>
+
+<!-- OTP MODAL -->
+<div id="otpModal" class="modal {% if show_otp_modal %}active{% endif %}">
+    <div class="modal-box">
+        <h3>Enter OTP</h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify_otp">
+
+            <input type="text" name="otp" placeholder="6-digit OTP" required>
+            <button type="submit">Verify</button>
+        </form>
+    </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div id="registerModal" class="modal">
+    <div class="modal-box">
+        <h3>Register</h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="register">
+            <label for="username">Username</label>
+            <input type="text" name="username" placeholder="Username" autocomplete="new-password" required>
+            <label for="email">Email</label>
+            <input type="email" name="email" placeholder="Email" autocomplete="new-password" required>
+            <label for="password">Password</label>
+            <input type="password" name="password" placeholder="Password" autocomplete="new-password" required>
+
+            <button type="submit">Register</button>
+        </form>
+    </div>
+</div>
+
+<!-- FORGOT PASSWORD MODAL -->
+<div id="forgotModal" class="modal">
+    <div class="modal-box">
+        <h3>Reset Password</h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="send_reset_otp">
+
+            <input type="email" name="email" placeholder="Enter Email" autocomplete="new-password">
+            <input type="password" name="new_password" placeholder="New Password" autocomplete="new-password" required>
+
+            <button type="submit">Send OTP</button>
+        </form>
+    </div>
+</div>
+
+<div id="resetOtpModal" class="modal {% if show_reset_otp_modal %}active{% endif %}">
+    <div class="modal-box">
+        <h3>Enter Reset OTP</h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="verify_reset_otp">
+
+            <input type="text" name="otp" placeholder="6-digit OTP" required>
+
+            <button type="submit">Verify & Update</button>
+        </form>
+    </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 LandScope | AI Real Estate Platform 🚀
+</div>
+
+<script>
+function openModal(id){
+    document.getElementById(id).classList.add('active');
+}
+function closeModal(id){
+    document.getElementById(id).classList.remove('active');
+}
+
+setTimeout(()=>{
+    const t=document.getElementById('toast');
+    const e=document.getElementById('error-toast');
+    if(t) t.remove();
+    if(e) e.remove();
+},4500);
+</script>
+<script>
+window.onclick = function(event) {
+    const modals = document.querySelectorAll(".modal");
+
+    modals.forEach(modal => {
+        if (event.target === modal) {
+            modal.classList.remove("active");
+        }
+    });
+}
+</script>
+<script>
+setTimeout(()=>{
+    const t=document.getElementById("toast");
+    const e=document.getElementById("error-toast");
+    if(t) t.remove();
+    if(e) e.remove();
+},4000);
+</script>
+</body>
+</html>
