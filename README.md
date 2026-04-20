@@ -26,7 +26,7 @@ LandScope is an AI-powered platform that helps users analyze and predict land in
 
 ## ⚙️ How to Run
 ```bash
-git clone https://github.com/your-username/LandScope-AI.git
+git clone https://github.com/your-username/LandScope.git
 cd LandScope-AI
 pip install -r requirements.txt
 python manage.py runserver
