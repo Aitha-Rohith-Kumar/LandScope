@@ -202,7 +202,7 @@ def contact(request):
         # ✅ Send email
         send_mail(
             "Thank you for contacting LandScope 🚀",
-            f"Hi {name},\n\nWe received your message.\n\n- LandScope Team",
+            f"Hi {name},\n\nWe received your message:\n\n{message}\n\nOur team will get back to you soon.\n\n- LandScope Team",
             settings.EMAIL_HOST_USER,
             [email],
             fail_silently=False,
