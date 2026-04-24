@@ -1,17 +1,17 @@
 from .models import Plot
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score
 
-def run_ml_pipeline():
-    
-    plots = Plot.objects.all()
-    
-    # Convert Django queryset to DataFrame
+def run_ml_pipeline(obj):
+
+    plots = Plot.objects.exclude(id=obj.id)
+
     data = []
     for plot in plots:
+        if None in [plot.metro_distance, plot.crime_rate, plot.pollution, plot.infrastructure]:
+            continue
+
         data.append({
-            "id": plot.id,
             "price": plot.price,
             "metro_distance": plot.metro_distance,
             "crime_rate": plot.crime_rate,
@@ -20,47 +20,53 @@ def run_ml_pipeline():
             "area_sqft": plot.area_sqft,
             "growth_index": plot.infrastructure * 0.5 + (10 - plot.metro_distance) * 0.5
         })
-    
+
+    # 🚨 Handle small dataset case
+    if len(data) < 3:
+        return {
+            "predicted_price": obj.price,
+            "investment_score": 50
+        }
+
     df = pd.DataFrame(data)
-    
-    # Features and Target
+
     X = df[['metro_distance','crime_rate','pollution','infrastructure','area_sqft','growth_index']]
     y = df['price']
-    
-    # Train Random Forest
+
     model = RandomForestRegressor(n_estimators=100)
     model.fit(X, y)
-    
-    predictions = model.predict(X)
-    
-    df['predicted_price'] = predictions
-    
-    # Simple Investment Score Formula
-    # Normalize values
-    valuation_strength = df['predicted_price'] / df['predicted_price'].max()
-    infra_score = df['infrastructure'] / 10
-    growth_score = df['growth_index'] / df['growth_index'].max()
 
-    # Convert metro distance to accessibility score (inverse)
-    metro_access = 1 - (df['metro_distance'] / df['metro_distance'].max())
+    # 🔥 Predict for CURRENT PLOT
+    growth_index = obj.infrastructure * 0.5 + (10 - obj.metro_distance) * 0.5
 
-    # Convert crime to safety score (inverse)
-    crime_safety = 1 - (df['crime_rate'] / df['crime_rate'].max())
+    input_data = [[
+        obj.metro_distance,
+        obj.crime_rate,
+        obj.pollution,
+        obj.infrastructure,
+        obj.area_sqft,
+        growth_index
+    ]]
 
-    # Advanced weighted scoring
-    df['investment_score'] = (
+    predicted_price = model.predict(input_data)[0]
+
+    # 🔥 Investment Score (same logic)
+    valuation_strength = predicted_price / df['price'].max()
+    infra_score = obj.infrastructure / 10
+    growth_score = growth_index / (df['price'].max())
+
+    metro_access = 1 - (obj.metro_distance / df['metro_distance'].max())
+    crime_safety = 1 - (obj.crime_rate / df['crime_rate'].max())
+
+    investment_score = (
         0.40 * valuation_strength +
         0.20 * infra_score +
         0.15 * growth_score +
         0.15 * metro_access +
         0.10 * crime_safety
     ) * 100
-    
-    # Save results back to DB
-    for _, row in df.iterrows():
-        plot = Plot.objects.get(id=row['id'])
-        plot.predicted_price = row['predicted_price']
-        plot.investment_score = row['investment_score']
-        plot.save()
-    
-    return r2_score(y, predictions)
+
+    return {
+        "predicted_price": predicted_price,
+        "investment_score": investment_score
+    }

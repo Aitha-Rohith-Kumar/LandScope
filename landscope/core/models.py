@@ -9,9 +9,9 @@ class Plot(models.Model):
     latitude = models.FloatField(null=True, blank=True)
     longitude = models.FloatField(null=True, blank=True)
     
-    metro_distance = models.FloatField()
-    crime_rate = models.FloatField()
-    pollution = models.FloatField()
+    metro_distance = models.FloatField(null=True, blank=True)
+    crime_rate = models.FloatField(null=True, blank=True)
+    pollution = models.FloatField(null=True, blank=True)
     infrastructure = models.FloatField(null=True, blank=True)
     
     predicted_price = models.FloatField(null=True, blank=True)
@@ -36,3 +36,12 @@ class Contact(models.Model):
     subject = models.CharField(max_length=200)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+from django.contrib.auth.models import User
+
+class Wishlist(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    plot = models.ForeignKey(Plot, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.plot.title}"

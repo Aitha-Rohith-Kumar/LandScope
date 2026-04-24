@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard | LandScope</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet">
+
+<style>
+body {
+    margin:0;
+    font-family:'Poppins';
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    color:#e2e8f0;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 60px;
+    background: #020617;
+}
+
+.header h2 { color: #38bdf8; }
+
+.nav a {
+    margin-left: 25px;
+    color: white;
+    text-decoration: none;
+}
+
+.nav a:hover { color: #38bdf8; }
+
+/* WELCOME */
+.welcome {
+    text-align:center;
+    padding:30px;
+}
+
+/* STATS */
+.stats {
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    margin:20px;
+}
+
+.stat-card {
+    background:rgba(30,41,59,0.7);
+    padding:20px;
+    border-radius:12px;
+    width:150px;
+    text-align:center;
+    transition:0.3s;
+}
+
+.stat-card:hover {
+    transform:scale(1.05);
+    box-shadow:0 0 20px rgba(56,189,248,0.4);
+}
+
+/* LISTINGS */
+.cards {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    gap:25px;
+    padding:40px;
+}
+
+/* CARD */
+.card {
+    background: rgba(30,41,59,0.7);
+    backdrop-filter: blur(12px);
+    border-radius:16px;
+    padding:25px;
+    position:relative;
+    cursor:pointer;
+    transition:0.4s;
+}
+
+.card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow:0 0 20px rgba(56,189,248,0.4);
+}
+
+/* ACTIONS */
+.actions {
+    position:absolute;
+    top:10px;
+    right:15px;
+    display:flex;
+    gap:12px;
+}
+
+.actions span {
+    cursor:pointer;
+    font-size:18px;
+    transition:0.3s;
+}
+
+.actions span:hover {
+    transform:scale(1.3);
+}
+
+/* STATUS */
+.approved { color:#22c55e; font-weight:bold; }
+.pending { color:#facc15; font-weight:bold; }
+
+/* FOOTER */
+.footer {
+    text-align:center;
+    padding:20px;
+    background:#020617;
+}
+
+/* MODAL */
+.modal {
+    display:none;
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.7);
+}
+
+.modal.active {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-box {
+    background:#1e293b;
+    padding:30px;
+    border-radius:12px;
+    width:320px;
+    animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {transform:scale(0.8); opacity:0;}
+    to {transform:scale(1); opacity:1;}
+}
+
+/* INPUT */
+input, select, textarea {
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:none;
+    border-radius:8px;
+}
+
+/* BUTTON */
+button {
+    width:100%;
+    padding:10px;
+    background:#38bdf8;
+    border:none;
+    border-radius:8px;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#0ea5e9;
+}
+
+.logout-btn {
+    padding:6px 12px;
+    background:#ef4444;
+    border-radius:8px;
+    color:white;
+    text-decoration:none;
+    transition:0.3s;
+}
+
+.logout-btn:hover {
+    background:#dc2626;
+}
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background: #22c55e;
+    color: white;
+    padding: 12px 20px;
+    margin-top: 10px;
+    border-radius: 8px;
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity:0; }
+    to { transform: translateX(0); opacity:1; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>LandScope</h2>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/buy">Buy</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% endif %}
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+        {% if user.is_authenticated %}
+            <span style="margin-left:20px;">👋 {{ user.username }}</span>
+            <a href="{% url 'logout' %}" class="logout-btn">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- WELCOME -->
+<div class="welcome">
+    <h2>Welcome, {{ user.username }} 👋</h2>
+    <p>Manage your properties smartly with AI insights</p>
+</div>
+
+<!-- STATS -->
+<div class="stats">
+    <div class="stat-card">
+        <p>Total</p>
+        <h3>{{ total }}</h3>
+    </div>
+    <div class="stat-card">
+        <p>Approved</p>
+        <h3>{{ approved }}</h3>
+    </div>
+    <div class="stat-card">
+        <p>Pending</p>
+        <h3>{{ pending }}</h3>
+    </div>
+</div>
+
+<!-- LISTINGS -->
+<div class="cards">
+
+{% for plot in plots %}
+<div class="card" onclick="openDetailModal('{{ plot.id }}')">
+
+    <div class="actions">
+        <span onclick="openEditModal(event, '{{ plot.id }}')">✏️</span>
+        <span onclick="openDeleteModal(event, '{{ plot.id }}')">🗑️</span>
+    </div>
+
+    <h3>{{ plot.title }}</h3>
+    <p>{{ plot.location }}</p>
+    <p><strong>₹{{ plot.price }}</strong></p>
+
+    {% if plot.is_approved %}
+        <span class="approved">Approved ✅</span>
+    {% else %}
+        <span class="pending">Pending ⏳</span>
+    {% endif %}
+
+</div>
+{% endfor %}
+
+</div>
+
+
+
+<!-- DETAIL MODAL -->
+<div id="detailModal" class="modal" onclick="closeModal('detailModal')">
+<div class="modal-box" onclick="event.stopPropagation()">
+    <h3 id="d-title"></h3>
+    <p id="d-location"></p>
+    <p id="d-price"></p>
+    <p id="d-score"></p>
+</div>
+</div>
+
+<!-- EDIT MODAL -->
+<div id="editModal" class="modal" onclick="closeModal('editModal')">
+<div class="modal-box" onclick="event.stopPropagation()">
+
+<form method="POST" id="editForm">
+{% csrf_token %}
+<input type="text" name="title" id="e-title" required>
+<input type="text" name="location" id="e-location" required>
+<input type="text" name="price" id="e-price" required>
+<button type="submit">Update Details</button>
+</form>
+
+</div>
+</div>
+
+<!-- DELETE MODAL -->
+<div id="deleteModal" class="modal" onclick="closeModal('deleteModal')">
+<div class="modal-box" onclick="event.stopPropagation()">
+
+<form method="POST" id="deleteForm">
+{% csrf_token %}
+
+<h3>Why are you deleting?</h3>
+
+<select name="reason" required>
+<option value="">Select reason</option>
+<option>Property Sold</option>
+<option>Not interested anymore</option>
+<option>Incorrect listing</option>
+<option>Price not suitable</option>
+<option>Other</option>
+</select>
+
+<textarea name="extra_reason" placeholder="Optional details..."></textarea>
+
+<button type="submit">Confirm Delete</button>
+
+</form>
+
+</div>
+</div>
+<div style="padding:40px;">
+    <h2 style="text-align:center; margin-bottom:20px;">❤️ Your Wishlist Properties</h2>
+
+    <div class="cards">
+
+    {% for item in wishlist %}
+        <div class="card" onclick="goToDetail({{ item.plot.id }})">
+
+            <h3>{{ item.plot.title }}</h3>
+            <p>{{ item.plot.location }}</p>
+            <p><strong>₹{{ item.plot.price }}</strong></p>
+
+            {% if item.plot.is_approved %}
+                <span class="approved">Approved ✅</span>
+            {% else %}
+                <span class="pending">Pending ⏳</span>
+            {% endif %}
+
+        </div>
+
+    {% empty %}
+        <p style="text-align:center;">No wishlist items yet ❤️</p>
+    {% endfor %}
+
+    </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+    © 2026 LandScope | AI Real Estate Platform 🚀
+</div>
+
+
+<script>
+let plots = JSON.parse('{{ plots_json|escapejs }}');
+
+function openDetailModal(id){
+    let p = plots.find(x => x.id == id);
+
+    document.getElementById("d-title").innerText = p.title;
+    document.getElementById("d-location").innerText = p.location;
+    document.getElementById("d-price").innerText = "₹" + p.price;
+    document.getElementById("d-score").innerText = "Score: " + (p.investment_score || "N/A");
+
+    document.getElementById("detailModal").classList.add("active");
+}
+
+function openEditModal(e,id){
+    e.stopPropagation();
+
+    let p = plots.find(x => x.id == id);
+
+    document.getElementById("e-title").value = p.title;
+    document.getElementById("e-location").value = p.location;
+    document.getElementById("e-price").value = p.price;
+
+    document.getElementById("editForm").action = "/edit/" + id + "/";
+    document.getElementById("editModal").classList.add("active");
+}
+
+function openDeleteModal(e,id){
+    e.stopPropagation();
+
+    document.getElementById("deleteForm").action = "/delete/" + id + "/";
+    document.getElementById("deleteModal").classList.add("active");
+}
+
+function closeModal(id){
+    document.getElementById(id).classList.remove("active");
+}
+</script>
+<script>
+function goToDetail(id){
+    window.location.href = "/detail/" + id + "/";
+}
+</script>
+<script>
+setTimeout(() => {
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+}, 4000);
+</script>
+<div id="toast-container">
+{% if messages %}
+    {% for message in messages %}
+        <div class="toast">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+</div>
+</body>
+</html>

@@ -28,46 +28,37 @@ def home(request):
     })
 
 
-from django.core.paginator import Paginator
-from .models import Plot
-from .ml_engine import run_ml_pipeline
+from django.contrib.auth.decorators import login_required
+from .models import Plot, Wishlist
 
 def buy(request):
-
-    # 🔥 Run ML once (or comment later for performance)
-
 
     budget = request.GET.get('budget')
     location = request.GET.get('location')
 
     plots = Plot.objects.filter(is_approved=True)
 
-
     if budget:
-        # 🔥 Remove commas & spaces
         cleaned_budget = budget.replace(",", "").replace(" ", "")
-
         try:
             budget_value = int(cleaned_budget)
             plots = plots.filter(price__lte=budget_value)
         except ValueError:
             pass
 
-    # ✅ Location filter
     if location:
         plots = plots.filter(location__icontains=location)
 
-    # ✅ Sort by score
     sort = request.GET.get('sort')
 
     if sort == "price":
-        plots = plots.order_by('price')  # low → high
+        plots = plots.order_by('price')
     elif sort == "score":
-        plots = plots.order_by('-investment_score')  # high → low
+        plots = plots.order_by('-investment_score')
     else:
-        plots = plots.order_by('-investment_score')  # default
+        plots = plots.order_by('-investment_score')
 
-    # ✅ Pagination
+    # ✅ PAGINATION
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
     paginator = Paginator(plots, 9)
@@ -80,12 +71,37 @@ def buy(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    return render(request, 'buy.html', {'page_obj': page_obj})
+    # 🔥 ADD THIS PART (WISHLIST)
+    wishlist_ids = []
 
+    if request.user.is_authenticated:
+        wishlist_ids = Wishlist.objects.filter(user=request.user)\
+                        .values_list('plot_id', flat=True)
+
+    return render(request, 'buy.html', {
+        'page_obj': page_obj,
+        'wishlist_ids': wishlist_ids   # 🔥 IMPORTANT
+    })
+
+
+from django.shortcuts import render, get_object_or_404
+from .models import Plot, Wishlist
 
 def plot_detail(request, plot_id):
-    plot = Plot.objects.get(id=plot_id)
-    return render(request, 'detail.html', {'plot': plot})
+    plot = get_object_or_404(Plot, id=plot_id)
+
+    is_wishlisted = False
+
+    if request.user.is_authenticated:
+        is_wishlisted = Wishlist.objects.filter(
+            user=request.user,
+            plot=plot
+        ).exists()
+
+    return render(request, 'detail.html', {
+        'plot': plot,
+        'is_wishlisted': is_wishlisted
+    })
 
 import folium
 from django.http import HttpResponse
@@ -218,6 +234,7 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
+from django.contrib import messages
 
 
 def login_view(request):
@@ -270,7 +287,7 @@ def login_view(request):
             if entered == session_otp:
                 user = User.objects.get(id=user_id)
                 login(request, user)
-
+                messages.success(request, "Login successful 🎉")
                 return redirect("home")
 
             else:
@@ -380,10 +397,113 @@ def sell(request):
 
     return render(request, "sell.html")
 
+
+
+
+
+
+
+
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from .models import Plot
+import json
+from .models import Wishlist
+
+@login_required
+def dashboard(request):
+
+    user_plots = Plot.objects.filter(created_by=request.user)
+
+    # ✅ CALCULATE STATS
+    total = user_plots.count()
+    approved = user_plots.filter(is_approved=True).count()
+    pending = user_plots.filter(is_approved=False).count()
+
+    wishlist = Wishlist.objects.filter(user=request.user).select_related('plot')
+
+    # ✅ JSON FOR MODALS
+    plots_data = list(user_plots.values(
+        'id','title','location','price','investment_score','is_approved'
+    ))
+
+    return render(request, 'dashboard.html', {
+        'plots': user_plots,
+        'plots_json': json.dumps(plots_data),
+        'total': total,
+        'approved': approved,
+        'pending': pending,
+        'wishlist': wishlist
+    })
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from .models import Plot
+from django.contrib import messages
+
+@login_required
+def edit_plot(request, id):
+    plot = get_object_or_404(Plot, id=id, created_by=request.user)
+
+    if request.method == "POST":
+        plot.title = request.POST.get('title')
+        plot.location = request.POST.get('location')
+        plot.price = request.POST.get('price')
+
+        plot.is_approved = False
+        plot.save()
+
+        messages.success(request, "Property updated successfully ✏️")
+
+    return redirect('dashboard')
+
+@login_required
+def delete_plot(request, id):
+    plot = get_object_or_404(Plot, id=id, created_by=request.user)
+
+    if request.method == "POST":
+        reason = request.POST.get('reason')
+        extra = request.POST.get('extra_reason')
+
+        # 👉 Optional: print or store reason
+        print("Delete reason:", reason, extra)
+
+        plot.delete()
+        messages.success(request, "Property deleted successfully 🗑️")
+
+    return redirect('dashboard')
+
+
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
+from .models import Wishlist
+
+@login_required
+def toggle_wishlist(request, id):
+    if request.method == "POST":
+        plot = get_object_or_404(Plot, id=id)
+
+        obj, created = Wishlist.objects.get_or_create(
+            user=request.user,
+            plot=plot
+        )
+
+        if not created:
+            obj.delete()
+            return JsonResponse({'status': 'removed'})
+
+        return JsonResponse({'status': 'added'})
+
+
 from django.contrib.auth import logout
 from django.shortcuts import redirect
+from django.contrib import messages
 
 def logout_view(request):
     logout(request)
-    request.session['logout_msg'] = "Logged out successfully 👋"
+    messages.success(request, "Logged out successfully 👋")
     return redirect('login')

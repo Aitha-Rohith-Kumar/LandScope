@@ -194,6 +194,27 @@ body {
 .logout-btn:hover {
     background:#dc2626;
 }
+
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.toast {
+    background: #22c55e;
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    margin-top: 10px;
+    animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
 </style>
 </head>
 
@@ -207,6 +228,9 @@ body {
         <a href="/buy">Buy</a>
         {% if user.is_authenticated %}
             <a href="{% url 'sell' %}">Sell</a>
+        {% endif %}
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}">Dashboard</a>
         {% endif %}
         <a href="/about">About</a>
         <a href="/contact">Contact</a>
@@ -317,6 +341,19 @@ setTimeout(()=>{
     if(t) t.remove();
     if(e) e.remove();
 },4000);
+</script>
+<div id="toast-container">
+{% if messages %}
+    {% for message in messages %}
+        <div class="toast success">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+</div>
+
+<script>
+setTimeout(() => {
+    document.querySelectorAll('.toast').forEach(t => t.remove());
+}, 4000);
 </script>
 </body>
 </html>
